@@ -1,0 +1,104 @@
+<project xmlns:ivy="antlib:org.apache.ivy.ant" default="build">
+    <!-- input directories and files -->
+    <property name="src.dir" value="src" />
+    <property name="lib.dir" value="lib" />
+
+    <!-- output directories and files -->
+    <property name="build.dir" value="build" />
+    <property name="classes.dir" value="${build.dir}/classes" />
+    <property name="jar.dir" value="${build.dir}/jar" />
+    <property name="jar.name" value="ExecutorInterface.jar" />
+    <property name="jar.pathname" value="${jar.dir}/${jar.name}" />
+    <property name="jar.main-class" value="it.infn.ct.ExecutorInterface" />
+
+    <!-- Ivy-related settings -->
+    <property name="ivy.install.version" value="2.4.0" />
+    <condition property="ivy.home" value="${env.IVY_HOME}">
+        <isset property="env.IVY_HOME" />
+    </condition>
+    <property name="ivy.home" value="${user.home}/.ant" />
+    <property name="ivy.jar.dir"  value="${ivy.home}/lib" />
+    <property name="ivy.jar.file" value="${ivy.jar.dir}/ivy.jar" />
+
+    <presetdef name="project.javac">
+        <javac debug="on" includeantruntime="false" />
+    </presetdef>
+
+    <path id="compile.classpath">
+        <fileset dir="${lib.dir}">
+            <include name="*.jar"/>
+        </fileset>
+    </path>
+
+    <target name="build" depends="compile">
+         <!--
+         <pathconvert property="classpath.names" pathsep=" ">
+             <path refid="compile.classpath" />
+             <mapper>
+                <chainedmapper>
+                    <flattenmapper />
+                    <globmapper from="*.jar" to="lib/*.jar" />
+                </chainedmapper>
+            </mapper>
+        </pathconvert>
+        -->
+        <jar destfile="${jar.pathname}" basedir="${classes.dir}" includes="**/*.class">
+            <zipgroupfileset dir="${lib.dir}" />
+            <manifest>
+                <attribute name="DependencyFinder" value="main"/>
+                <attribute name="Main-Class" value="${jar.main-class}" />
+                <!-- <attribute name="Class-Path" value="${classpath.names}" /> -->
+            </manifest>
+        </jar>
+    </target>
+
+    <target name="compile" depends="get-dependencies">
+        <mkdir dir="${classes.dir}" />
+        <mkdir dir="${jar.dir}" />
+
+        <project.javac srcdir="${src.dir}" destdir="${classes.dir}">
+            <classpath refid="compile.classpath" />
+            <!-- <classpath>
+                <fileset dir="${lib.dir}" includes="**/*.jar" />
+                <path location="${jar.pathname}" />
+            </classpath> -->
+        </project.javac>
+    </target>
+
+    <target name="test" depends="build">
+        <java jar="${jar.pathname}" fork="true">
+            <classpath>
+                <fileset dir="${lib.dir}" includes="**/*.jar" />
+                <path location="${basedir}" />
+            </classpath>
+        </java>
+    </target>
+
+    <target name="clean">
+        <delete dir="${build.dir}" />
+        <delete dir="${lib.dir}" />
+    </target>
+
+    <target name="clean-all" depends="clean" description="clean ivy cache">
+        <ivy:cleancache />
+    </target>
+
+    <target name="get-dependencies" depends="init-ivy">
+        <ivy:retrieve conf="binaries" pattern="lib/[artifact](-[classifier]).[ext]" />
+    </target>
+
+    <target name="init-ivy" depends="download-ivy">
+        <path id="ivy.lib.path">
+            <fileset dir="${ivy.jar.dir}" includes="*.jar" />
+        </path>
+        <taskdef resource="org/apache/ivy/ant/antlib.xml"
+                 uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path" />
+    </target>
+
+    <target name="download-ivy" unless="offline">
+        <mkdir dir="${ivy.jar.dir}" />
+        <get src="https://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar"
+             dest="${ivy.jar.file}" usetimestamp="true" />
+    </target>
+
+</project>
