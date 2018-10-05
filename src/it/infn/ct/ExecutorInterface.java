@@ -179,6 +179,8 @@ public interface ExecutorInterface {
      * Tester code
      */
     public static void main(String[] args) {
+        // Enable logging
+        BasicConfigurator.configure();
 
         /**
          * Define test executor interface
@@ -209,13 +211,10 @@ public interface ExecutorInterface {
                 LOG.info("testExecutorInterface Delete method called.");
             }
         }
-         */
-
-        // Enable logging
-        BasicConfigurator.configure();
 
         // Use test executor interface
-        //testExecutorInterface tEI = new testExecutorInterface();
+        testExecutorInterface tEI = new testExecutorInterface();
+        **/
 
         ExecutorInterface ei = 
             ExecutorInterface.getExecutorInterface("it.infn.ct.testExecutorInterface");
